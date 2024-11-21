@@ -7,6 +7,7 @@ pub mod vault {
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        
         ctx.accounts.initialize(&ctx.bumps)
     }
 
@@ -30,11 +31,11 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer =user,
-        space = 8+ vaultState::INIT_SPACE,
+        space = 8+ VaultState::INIT_SPACE,
         seeds = [b"state",user.key().as_ref()],
         bump
     )]
-    pub state:Account<'info,vaultState>,
+    pub state:Account<'info,VaultState>,
     #[account(
         seeds = [b"vault",state.key().as_ref()],
         bump
@@ -63,7 +64,7 @@ pub struct  Payment<'info>{
         seeds = [b"state",user.key().as_ref()],
         bump = state.state_bump
     )]
-    pub state:Account<'info,vaultState>,
+    pub state:Account<'info,VaultState>,
     #[account(
         mut,
         seeds = [b"vault",state.key().as_ref()],
@@ -107,51 +108,9 @@ impl <'info> Payment<'info> {
     
 }
 
-
-
-
-#[derive(Accounts)]
-pub struct Close<'info>{
-    #[account(mut)]
-    pub user:Signer<'info>,
-    #[account(
-        seeds =[b"state", user.key.as_ref()],
-        bump
-    )]
-    pub vault:SystemAccount<'info>,
-    #[account(
-        seeds = [b"state", user.key().as_ref()],
-        bump ,
-    )]
-    pub state:Account<'info, vaultState>,
-    pub sytem_program:Program<'info,System>
-}
-impl <'info> Close<'info> {
-
-    pub fn close(&mut self)-> Result<()>{
-
-        let balance = self.vault.lamports(); 
-
-        let cpi_account = Transfer{
-            from:self.vault.to_account_info(),
-            to:self.user.to_account_info()
-        };
-
-        let seeds = &[
-            b"vault",
-            self.state.to_account_info().key.as_ref(),
-            &[self.state.vault_bump]
-        ];
-
-
-        Ok(())
-
-    }
-    
-}
 #[account]
 #[derive(InitSpace)]
-pub struct vaultState{
+pub struct VaultState{
 
     pub vault_bump:u8,
     pub state_bump:u8,
